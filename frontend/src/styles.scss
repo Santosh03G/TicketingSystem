@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+    background-color: #F9FAFB;
+    font-family: 'Inter', sans-serif;
+    color: #1F2937;
+}
+
+// Premium gradient background
+.bg-premium-gradient {
+    // Red/Rose gradient for Helpdesk branding
+    background: linear-gradient(135deg, #881337 0%, #be123c 50%, #e11d48 100%);
+    position: relative;
+    overflow: hidden;
+
+    &::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+        animation: rotate 20s linear infinite;
+    }
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+// Glassmorphism card
+.glass-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+}
+
+// Custom input float animation
+.float-input {
+    &:placeholder-shown~.float-label {
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1rem;
+        color: #9CA3AF;
+    }
+
+    &:focus~.float-label,
+    &:not(:placeholder-shown)~.float-label {
+        top: 0;
+        transform: translateY(-50%) scale(0.85);
+        background-color: white;
+        padding: 0 4px;
+        color: #b0303c; // Updated to primary brand red
+    }
+}
+
+// Ensure global error shake works
+.shake-error {
+    animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
+}

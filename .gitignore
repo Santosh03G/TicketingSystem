@@ -1,0 +1,27 @@
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Backend - Java/Maven
+backend/target/
+backend/*.log
+backend/**/*.class
+backend/.idea/
+backend/*.iml
+backend/.mvn/
+backend/mvnw
+backend/mvnw.cmd
+backend/help.md
+
+# Frontend - Angular/Node
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+frontend/.editorconfig
+frontend/.vscode/
+frontend/coverage/
+frontend/*.log
+
+# IDE
+.vscode/
+.idea/

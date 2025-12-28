@@ -40,6 +40,14 @@ export class ApiService {
         return this.http.post<User>(`${this.apiUrl}/users`, user);
     }
 
+    updateUser(id: number, user: Partial<User>): Observable<User> {
+        return this.http.put<User>(`${this.apiUrl}/users/${id}`, user);
+    }
+
+    deleteUser(id: number): Observable<void> {
+        return this.http.delete<void>(`${this.apiUrl}/users/${id}`);
+    }
+
     login(credentials: any): Observable<User> {
         return this.http.post<User>(`${this.apiUrl}/auth/login`, credentials);
     }

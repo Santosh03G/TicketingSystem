@@ -233,10 +233,12 @@ interface Setting {
                   <h2 class="text-lg font-bold text-gray-900 mb-1">Bulk User Creation</h2>
                   <p class="text-sm text-gray-500 mb-6">Upload an Excel file (.xlsx) to create multiple users at once.</p>
 
-                  <div class="glass-card p-8 rounded-xl border border-gray-100/50 flex flex-col items-center justify-center border-dashed border-2 border-gray-200 hover:border-primary/50 transition-colors bg-gray-50/50">
+                  <div class="glass-card p-8 rounded-xl border border-gray-100/50 flex flex-col items-center justify-center border-dashed border-2 border-gray-200 hover:border-primary/50 transition-colors bg-gray-50/50 relative">
                       
-                      <label for="file-upload" class="cursor-pointer flex flex-col items-center justify-center w-full">
-                          <div class="mb-4 text-gray-300 hover:text-primary transition-colors">
+                      <input #fileInput id="file-upload" name="file-upload" type="file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" accept=".xlsx, .xls" (change)="onFileSelected(fileInput.files)">
+
+                      <div class="flex flex-col items-center justify-center pointer-events-none">
+                          <div class="mb-4 text-gray-300 transition-colors" [class.text-primary]="selectedFile">
                               <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                           </div>
 
@@ -245,12 +247,10 @@ interface Setting {
                                   {{ selectedFile ? selectedFile.name : 'Click to select a file' }}
                               </span>
                               <span class="mt-1 block text-xs text-gray-500">Allowed formats: .xlsx, .xls</span>
-                              <input #fileInput id="file-upload" name="file-upload" type="file" class="sr-only" accept=".xlsx, .xls" (change)="onFileSelected(fileInput.files)">
                           </div>
-                      </label>
+                      </div>
 
-                      <button (click)="uploadUsers()" [disabled]="!selectedFile"
-                              class="px-8 py-3 bg-[#be123c] hover:bg-[#9f1239] text-white rounded-xl shadow-lg transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl font-medium text-sm tracking-wide disabled:opacity-50 disabled:cursor-not-allowed">
+                      <button (click)="uploadUsers()" [disabled]="!selectedFile" class="z-20 px-8 py-3 bg-[#be123c] hover:bg-[#9f1239] text-white rounded-xl shadow-lg transform transition-all duration-300 hover:-translate-y-1 hover:shadow-xl font-medium text-sm tracking-wide disabled:opacity-50 disabled:cursor-not-allowed">
                           Upload Users
                       </button>
                   </div>
@@ -415,7 +415,12 @@ export class SettingsComponent implements OnInit {
             },
             error: (err) => {
                 this.isError = true;
-                this.message = err.error || 'Failed to import users';
+                if (err.error && typeof err.error === 'object') {
+                    this.message = err.error.message || err.error.error || 'Failed to import users';
+                } else {
+                    this.message = err.error || 'Failed to import users';
+                }
+                console.error('Upload failed:', err);
             }
         });
     }

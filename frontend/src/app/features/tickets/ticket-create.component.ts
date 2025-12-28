@@ -89,6 +89,21 @@ import { CustomSelectComponent, SelectOption } from '../../shared/components/cus
             </div>
         </form>
       </div>
+      <!-- Success Modal -->
+      <div *ngIf="showSuccessModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/50 backdrop-blur-sm animate-fade-in">
+          <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 text-center transform transition-all scale-100">
+              <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+                  <svg class="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                  </svg>
+              </div>
+              <h3 class="text-xl font-bold text-gray-900 mb-2">Ticket Created!</h3>
+              <p class="text-gray-500 mb-6">Your ticket has been successfully submitted. Our support team will review it shortly.</p>
+              <button (click)="closeSuccessModal()" class="w-full px-6 py-3 bg-[#be123c] hover:bg-[#9f1239] text-white rounded-xl shadow-lg transform transition-all duration-200 hover:-translate-y-0.5 font-medium">
+                  Go to Tickets
+              </button>
+          </div>
+      </div>
     </div>
   `
 })
@@ -104,6 +119,8 @@ export class TicketCreateComponent implements OnInit {
     staffOptions: SelectOption[] = [];
     isLoading = false;
 
+    showSuccessModal = false;
+
     private apiService = inject(ApiService);
     private authService = inject(AuthService);
     private router = inject(Router);
@@ -116,8 +133,6 @@ export class TicketCreateComponent implements OnInit {
 
         // Fetch users to populate 'Assign To' dropdown
         this.apiService.getUsers().subscribe(users => {
-            // Filter for staff only? Or just all users as per existing logic
-            // Adding an 'Unassigned' option is handled by the placeholder or a specific null option
             this.staffOptions = [
                 { label: 'Unassigned', value: null }, // Explicit unassigned option
                 ...users.map(u => ({ label: u.name || u.email, value: u }))
@@ -141,7 +156,7 @@ export class TicketCreateComponent implements OnInit {
             this.apiService.createTicket(this.ticket).subscribe({
                 next: () => {
                     this.isLoading = false;
-                    this.router.navigate(['/tickets']);
+                    this.showSuccessModal = true;
                 },
                 error: (error) => {
                     console.error('Error creating ticket:', error);
@@ -154,5 +169,10 @@ export class TicketCreateComponent implements OnInit {
             alert('User not authenticated. Please login.');
             this.router.navigate(['/login']);
         }
+    }
+
+    closeSuccessModal() {
+        this.showSuccessModal = false;
+        this.router.navigate(['/tickets']);
     }
 }

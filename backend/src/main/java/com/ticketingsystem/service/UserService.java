@@ -1,9 +1,11 @@
 package com.ticketingsystem.service;
 
+import com.ticketingsystem.model.Role;
 import com.ticketingsystem.model.User;
 import com.ticketingsystem.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 import java.util.List;
 import java.util.Optional;
@@ -63,13 +65,6 @@ public class UserService {
         user.setOtp(otp);
         user.setOtpExpirationTime(java.time.LocalDateTime.now().plusMinutes(5));
         userRepository.save(user);
-
-        // Return or use EmailService to send this OTP
-        // For now, we will assume the Controller calls EmailService using the OTP from
-        // the user entity if needed,
-        // or we can inject EmailService here.
-        // To keep UserService clean, let's just save it. The controller will retrieve
-        // it to send via email.
     }
 
     public User findByEmail(String email) {
@@ -103,43 +98,59 @@ public class UserService {
     }
 
     public void saveUsersFromExcel(org.springframework.web.multipart.MultipartFile file) {
-        try (org.apache.poi.ss.usermodel.Workbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook(
-                file.getInputStream())) {
-            org.apache.poi.ss.usermodel.Sheet sheet = workbook.getSheetAt(0);
-            List<User> users = new java.util.ArrayList<>();
+        System.out.println("Receiving file: " + file.getOriginalFilename() + " Size: " + file.getSize());
+        java.nio.file.Path tempFile = null;
+        try {
+            tempFile = java.nio.file.Files.createTempFile("upload", ".xlsx");
+            file.transferTo(tempFile.toFile());
 
-            for (org.apache.poi.ss.usermodel.Row row : sheet) {
-                if (row.getRowNum() == 0)
-                    continue; // Skip header
+            try (org.apache.poi.ss.usermodel.Workbook workbook = WorkbookFactory.create(tempFile.toFile())) {
+                org.apache.poi.ss.usermodel.Sheet sheet = workbook.getSheetAt(0);
+                List<User> users = new java.util.ArrayList<>();
 
-                String name = getCellValue(row.getCell(0));
-                String email = getCellValue(row.getCell(1));
-                String password = getCellValue(row.getCell(2));
-                String roleStr = getCellValue(row.getCell(3));
+                for (org.apache.poi.ss.usermodel.Row row : sheet) {
+                    if (row.getRowNum() == 0)
+                        continue; // Skip header
 
-                if (name.isEmpty() || email.isEmpty() || password.isEmpty())
-                    continue;
+                    String name = getCellValue(row.getCell(0));
+                    String email = getCellValue(row.getCell(1));
+                    String password = getCellValue(row.getCell(2));
+                    String roleStr = getCellValue(row.getCell(3));
 
-                // Check if user already exists
-                if (userRepository.existsByEmail(email))
-                    continue;
+                    if (name.isEmpty() || email.isEmpty() || password.isEmpty())
+                        continue;
 
-                User user = new User();
-                user.setName(name);
-                user.setEmail(email);
-                user.setPassword(password); // In a real app, hash this!
+                    // Check if user already exists
+                    if (userRepository.existsByEmail(email))
+                        continue;
 
-                try {
-                    user.setRole(Role.valueOf(roleStr.toUpperCase()));
-                } catch (IllegalArgumentException | NullPointerException e) {
-                    user.setRole(Role.USER); // Default to USER
+                    User user = new User();
+                    user.setName(name);
+                    user.setEmail(email);
+                    user.setPassword(password); // In a real app, hash this!
+
+                    try {
+                        user.setRole(Role.valueOf(roleStr.toUpperCase()));
+                    } catch (IllegalArgumentException | NullPointerException e) {
+                        user.setRole(Role.USER); // Default to USER
+                    }
+
+                    users.add(user);
                 }
-
-                users.add(user);
+                userRepository.saveAll(users);
             }
-            userRepository.saveAll(users);
-        } catch (java.io.IOException e) {
-            throw new RuntimeException("Failed to parse Excel file: " + e.getMessage());
+        } catch (Exception e) {
+            e.printStackTrace(); // Log to console
+            throw new RuntimeException("Import failed: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+        } finally {
+            // Clean up temp file
+            if (tempFile != null) {
+                try {
+                    java.nio.file.Files.deleteIfExists(tempFile);
+                } catch (java.io.IOException e) {
+                    System.err.println("Failed to delete temp file: " + e.getMessage());
+                }
+            }
         }
     }
 

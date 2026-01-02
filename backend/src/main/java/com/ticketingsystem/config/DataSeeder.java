@@ -13,14 +13,26 @@ public class DataSeeder {
     @Bean
     CommandLineRunner initDatabase(UserRepository userRepository) {
         return args -> {
-            if (userRepository.count() == 0) {
+            // Create Admin
+            if (!userRepository.existsByEmail("santosh.g@saazvat.com")) {
                 User admin = new User();
                 admin.setName("Santosh Admin");
                 admin.setEmail("santosh.g@saazvat.com");
-                admin.setPassword("password"); // In real app, hash this!
+                admin.setPassword("Saazvat@120");
                 admin.setRole(Role.ADMIN);
                 userRepository.save(admin);
-                System.out.println("Default admin user created: santosh.g@saazvat.com / password");
+                System.out.println("Admin created: santosh.g@saazvat.com");
+            }
+
+            // Create User
+            if (!userRepository.existsByEmail("reachoutsantosh.g@gmail.com")) {
+                User user = new User();
+                user.setName("Santosh User");
+                user.setEmail("reachoutsantosh.g@gmail.com");
+                user.setPassword("Anadearms@1011");
+                user.setRole(Role.USER);
+                userRepository.save(user);
+                System.out.println("User created: reachoutsantosh.g@gmail.com");
             }
         };
     }

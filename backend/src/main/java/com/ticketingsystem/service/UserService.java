@@ -16,8 +16,11 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private EmailService emailService;
+
     public List<User> getAllUsers() {
-        return userRepository.findAll();
+        return userRepository.findByIsDeletedFalse();
     }
 
     public Optional<User> getUserById(Long id) {
@@ -25,10 +28,36 @@ public class UserService {
     }
 
     public User createUser(User user) {
-        if (userRepository.existsByEmail(user.getEmail())) {
-            throw new RuntimeException("Email already exists");
+        Optional<User> existing = userRepository.findByEmail(user.getEmail());
+        if (existing.isPresent()) {
+            if (!existing.get().isDeleted()) {
+                throw new RuntimeException("Email already exists");
+            } else {
+                // It's a deleted user, rename it to free up the email
+                User deletedUser = existing.get();
+                deletedUser.setEmail(deletedUser.getEmail() + "_reclaimed_" + System.currentTimeMillis());
+                userRepository.save(deletedUser);
+            }
         }
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+
+        // Send welcome email
+        String subject = "Welcome to the Ticketing System";
+        String body = "Hello " + user.getName() + ",\n\n" +
+                "Welcome to the Ticketing System! Your account has been successfully created.\n\n" +
+                "Here are your login details:\n" +
+                "Email: " + user.getEmail() + "\n" +
+                "Password: " + user.getPassword() + "\n\n" +
+                "Please login and change your password immediately.\n\n" +
+                "Best Regards,\nTicketing System Team";
+
+        try {
+            emailService.sendSimpleEmail(user.getEmail(), subject, body);
+        } catch (Exception e) {
+            System.err.println("Failed to send welcome email: " + e.getMessage());
+        }
+
+        return savedUser;
     }
 
     public User updateUser(Long id, User userDetails) {
@@ -43,7 +72,12 @@ public class UserService {
     }
 
     public void deleteUser(Long id) {
-        userRepository.deleteById(id);
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setDeleted(true);
+        // Append timestamp to email to allow reuse of the original email
+        user.setEmail(user.getEmail() + "_deleted_" + System.currentTimeMillis());
+        userRepository.save(user);
     }
 
     public User login(String email, String password) {

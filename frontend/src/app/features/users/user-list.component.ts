@@ -1,4 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
+import { WarningModalComponent } from '../../shared/components/warning-modal/warning-modal.component';
+import { SuccessModalComponent } from '../../shared/components/success-modal/success-modal.component';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
 import { User, Role } from '../../core/models/user.model';
@@ -8,7 +10,7 @@ import { RouterLink } from '@angular/router';
 @Component({
   selector: 'app-user-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, WarningModalComponent, SuccessModalComponent],
   template: `
     <div class="space-y-8 animate-fade-in">
       <!-- Header -->
@@ -160,6 +162,22 @@ import { RouterLink } from '@angular/router';
            </div>
         </div>
       </div>
+
+        <app-warning-modal
+        [isOpen]="showDeleteModal"
+        title="Delete"
+        [message]="deleteMessage"
+        variant="delete"
+        (confirm)="confirmDelete()"
+        (cancel)="closeDeleteModal()">
+      </app-warning-modal>
+      
+      <app-success-modal 
+        [isOpen]="showSuccessModal" 
+        [title]="'Success'"
+        [message]="'User has been deleted successfully.'"
+        (close)="closeSuccessModal()">
+      </app-success-modal>
     </div>
   `
 })
@@ -209,14 +227,39 @@ export class UserListComponent implements OnInit {
     });
   }
 
+  // Delete Modal State
+  showDeleteModal = false;
+  userToDelete: User | null = null;
+  deleteMessage = '';
+
   deleteUser(user: User) {
-    if (confirm(`Are you sure you want to delete ${user.name}?`)) {
-      this.apiService.deleteUser(user.id).subscribe({
-        next: () => {
-          this.users = this.users.filter(u => u.id !== user.id);
-        },
-        error: (err) => console.error('Failed to delete user', err)
-      });
-    }
+    this.userToDelete = user;
+    this.deleteMessage = `Are you sure you want to delete ${user.name} ? `;
+    this.showDeleteModal = true;
+  }
+
+  closeDeleteModal() {
+    this.showDeleteModal = false;
+    this.userToDelete = null;
+  }
+
+  confirmDelete() {
+    if (!this.userToDelete) return;
+
+    this.apiService.deleteUser(this.userToDelete.id).subscribe({
+      next: () => {
+        this.users = this.users.filter(u => u.id !== this.userToDelete?.id);
+        this.closeDeleteModal();
+        this.showSuccessModal = true;
+      },
+      error: (err) => console.error('Failed to delete user', err)
+    });
+  }
+
+  // Success Modal State
+  showSuccessModal = false;
+
+  closeSuccessModal() {
+    this.showSuccessModal = false;
   }
 }

@@ -36,6 +36,9 @@ public class User {
 
     private LocalDateTime otpExpirationTime;
 
+    @Column(nullable = false)
+    private boolean isDeleted = false;
+
     @PrePersist
     protected void onCreate() {
         joinedAt = LocalDateTime.now();

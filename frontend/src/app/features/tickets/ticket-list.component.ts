@@ -7,11 +7,13 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { CustomSelectComponent, SelectOption } from '../../shared/components/custom-select/custom-select.component';
+import { SuccessModalComponent } from '../../shared/components/success-modal/success-modal.component';
+import { WarningModalComponent } from '../../shared/components/warning-modal/warning-modal.component';
 
 @Component({
   selector: 'app-ticket-list',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, CustomSelectComponent],
+  imports: [CommonModule, FormsModule, RouterLink, CustomSelectComponent, SuccessModalComponent, WarningModalComponent],
   template: `
     <div class="space-y-6 animate-fade-in">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between bg-white/50 backdrop-blur-sm p-6 rounded-2xl border border-white/60 shadow-sm">
@@ -124,6 +126,21 @@ import { CustomSelectComponent, SelectOption } from '../../shared/components/cus
           </li>
         </ul>
       </div>
+      <app-success-modal 
+        [isOpen]="showSuccessModal" 
+        [title]="successTitle"
+        [message]="successMessage"
+        (close)="closeSuccessModal()">
+      </app-success-modal>
+      
+      <app-warning-modal
+        [isOpen]="showWarningModal"
+        [title]="warningTitle"
+        [message]="warningMessage"
+        [variant]="warningVariant"
+        (confirm)="onWarningConfirm()"
+        (cancel)="closeWarningModal()">
+      </app-warning-modal>
     </div>
   `
 })
@@ -196,12 +213,33 @@ export class TicketListComponent implements OnInit {
   }
 
   updateStatus(ticket: Ticket, status: string) {
-    if (!confirm(`Are you sure you want to mark this ticket as ${status}?`)) return;
+    this.pendingTicket = ticket;
+    this.pendingStatus = status;
 
+    // Customize message based on status
+    if (status === 'RESOLVED') {
+      this.warningTitle = 'Resolve Ticket';
+      this.warningMessage = 'Are you sure you want to resolve this ticket?';
+      this.warningVariant = 'success';
+    } else if (status === 'DENIED') {
+      this.warningTitle = 'Deny Ticket';
+      this.warningMessage = 'Are you sure you want to deny this ticket?';
+      this.warningVariant = 'warning';
+    } else {
+      this.warningTitle = 'Update Status';
+      this.warningMessage = `Are you sure you want to mark this ticket as ${status}?`;
+      this.warningVariant = 'warning';
+    }
+
+    this.openWarningModal();
+  }
+
+  processStatusUpdate(ticket: Ticket, status: string) {
     this.apiService.updateTicket(ticket.id, { status: status as TicketStatus }).subscribe({
       next: () => {
         console.log('Ticket status updated successfully');
         this.loadTickets();
+        this.openSuccessModal('Success', `Ticket status has been updated to ${status}.`);
       },
       error: (err) => {
         console.error('Failed to update status', err);
@@ -238,6 +276,7 @@ export class TicketListComponent implements OnInit {
         next: () => {
           console.log('Ticket assigned successfully in frontend');
           this.loadTickets();
+          this.openSuccessModal('Success', 'Ticket assigned successfully!');
         },
         error: (err) => {
           console.error('API Error during assignment:', err);
@@ -256,6 +295,46 @@ export class TicketListComponent implements OnInit {
           dropdown.close();
         }
       });
+    }
+  }
+
+  // Modal State
+  showSuccessModal = false;
+  successTitle = 'Success';
+  successMessage = 'Action is done successfully!';
+
+  openSuccessModal(title?: string, message?: string) {
+    if (title) this.successTitle = title;
+    if (message) this.successMessage = message;
+    this.showSuccessModal = true;
+  }
+
+  closeSuccessModal() {
+    this.showSuccessModal = false;
+  }
+
+  // Warning Modal State
+  showWarningModal = false;
+  pendingTicket: Ticket | null = null;
+  pendingStatus: string | null = null;
+  warningTitle = 'Warning';
+  warningMessage = 'Are you sure about this action?';
+  warningVariant: 'warning' | 'success' = 'warning';
+
+  openWarningModal() {
+    this.showWarningModal = true;
+  }
+
+  closeWarningModal() {
+    this.showWarningModal = false;
+    this.pendingTicket = null;
+    this.pendingStatus = null;
+  }
+
+  onWarningConfirm() {
+    if (this.pendingTicket && this.pendingStatus) {
+      this.processStatusUpdate(this.pendingTicket, this.pendingStatus);
+      this.closeWarningModal();
     }
   }
 }

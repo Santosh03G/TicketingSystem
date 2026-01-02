@@ -1,4 +1,6 @@
 import { Component, inject } from '@angular/core';
+import { SuccessModalComponent } from '../../shared/components/success-modal/success-modal.component';
+import { ErrorModalComponent } from '../../shared/components/error-modal/error-modal.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -8,7 +10,7 @@ import { User, Role } from '../../core/models/user.model';
 @Component({
     selector: 'app-user-create',
     standalone: true,
-    imports: [CommonModule, FormsModule, RouterLink],
+    imports: [CommonModule, FormsModule, RouterLink, SuccessModalComponent, ErrorModalComponent],
     template: `
     <div class="space-y-6 animate-fade-in">
        <!-- Header -->
@@ -78,6 +80,18 @@ import { User, Role } from '../../core/models/user.model';
             </div>
         </form>
       </div>
+      <app-success-modal 
+        [isOpen]="showSuccessModal" 
+        [title]="'User Created'"
+        [message]="'User has been created successfully and a welcome email has been sent.'"
+        (close)="closeSuccessModal()">
+      </app-success-modal>
+      <app-error-modal 
+        [isOpen]="showErrorModal" 
+        [title]="'Creation Failed'"
+        [message]="errorMessage"
+        (close)="closeErrorModal()">
+      </app-error-modal>
     </div>
   `
 })
@@ -98,14 +112,29 @@ export class UserCreateComponent {
         this.apiService.createUser(this.user as User).subscribe({
             next: () => {
                 this.isLoading = false;
-                this.router.navigate(['/users']);
+                this.showSuccessModal = true;
             },
             error: (error) => {
                 console.error('Error creating user:', error);
                 this.isLoading = false;
-                // Ideally show a toast notification here
-                alert('Failed to create user. Please try again.');
+                this.errorMessage = error?.error?.message || 'Failed to create user. Please try again.';
+                this.showErrorModal = true;
             }
         });
+    }
+
+    // Modal State
+    showSuccessModal = false;
+
+    closeSuccessModal() {
+        this.showSuccessModal = false;
+        this.router.navigate(['/users']);
+    }
+
+    showErrorModal = false;
+    errorMessage = '';
+
+    closeErrorModal() {
+        this.showErrorModal = false;
     }
 }

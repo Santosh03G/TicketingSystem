@@ -8,10 +8,13 @@ import { Ticket, TicketStatus } from '../../core/models/ticket.model';
 import { Comment } from '../../core/models/comment.model';
 import { Role } from '../../core/models/user.model';
 
+import { SuccessModalComponent } from '../../shared/components/success-modal/success-modal.component';
+import { WarningModalComponent } from '../../shared/components/warning-modal/warning-modal.component';
+
 @Component({
     selector: 'app-ticket-detail',
     standalone: true,
-    imports: [CommonModule, FormsModule, RouterLink],
+    imports: [CommonModule, FormsModule, RouterLink, SuccessModalComponent, WarningModalComponent],
     template: `
     <div class="space-y-8 animate-fade-in" *ngIf="ticket">
       <!-- Header -->
@@ -128,6 +131,21 @@ import { Role } from '../../core/models/user.model';
           </div>
       </div>
 
+      <app-success-modal 
+        [isOpen]="showSuccessModal" 
+        [title]="successTitle"
+        [message]="successMessage"
+        (close)="closeSuccessModal()">
+      </app-success-modal>
+      
+      <app-warning-modal
+        [isOpen]="showWarningModal"
+        [title]="warningTitle"
+        [message]="warningMessage"
+        [variant]="warningVariant"
+        (confirm)="onWarningConfirm()"
+        (cancel)="closeWarningModal()">
+      </app-warning-modal>
     </div>
   `
 })
@@ -161,19 +179,78 @@ export class TicketDetailComponent implements OnInit {
         return this.authService.hasRole([Role.ADMIN, Role.STAFF]);
     }
 
+    // Modal State
+    showSuccessModal = false;
+    successTitle = 'Success';
+    successMessage = 'Action is done successfully!';
+
+    showWarningModal = false;
+    warningTitle = 'Warning';
+    warningMessage = 'Are you sure about this action?';
+    warningVariant: 'warning' | 'success' = 'warning';
+
+    pendingStatus: string | null = null;
+
     updateStatus(status: string) {
         if (!this.ticket) return;
-        if (!confirm(`Are you sure you want to mark this ticket as ${status}?`)) return;
 
-        this.apiService.updateTicket(this.ticket.id, { status: status as TicketStatus }).subscribe({
+        this.pendingStatus = status;
+
+        if (status === 'RESOLVED') {
+            this.warningTitle = 'Resolve Ticket';
+            this.warningMessage = 'Are you sure you want to resolve this ticket?';
+            this.warningVariant = 'success';
+        } else if (status === 'DENIED') {
+            this.warningTitle = 'Deny Ticket';
+            this.warningMessage = 'Are you sure you want to deny this ticket?';
+            this.warningVariant = 'warning';
+        } else {
+            this.warningTitle = 'Update Status';
+            this.warningMessage = `Are you sure you want to mark this ticket as ${status}?`;
+            this.warningVariant = 'warning';
+        }
+
+        this.openWarningModal();
+    }
+
+    openWarningModal() {
+        this.showWarningModal = true;
+    }
+
+    closeWarningModal() {
+        this.showWarningModal = false;
+        this.pendingStatus = null;
+    }
+
+    onWarningConfirm() {
+        if (this.ticket && this.pendingStatus) {
+            this.processStatusUpdate(this.ticket.id, this.pendingStatus);
+            this.closeWarningModal();
+        }
+    }
+
+    processStatusUpdate(ticketId: number, status: string) {
+        this.apiService.updateTicket(ticketId, { status: status as TicketStatus }).subscribe({
             next: () => {
-                this.loadTicket(this.ticket!.id); // Reload to reflect changes
+                this.loadTicket(ticketId); // Reload to reflect changes
+                this.openSuccessModal('Success', `Ticket status has been updated to ${status}.`);
             },
             error: (err) => {
                 console.error('Failed to update status', err);
                 alert('Failed to update ticket status');
             }
         });
+    }
+
+    // Success Modal Helpers
+    openSuccessModal(title?: string, message?: string) {
+        if (title) this.successTitle = title;
+        if (message) this.successMessage = message;
+        this.showSuccessModal = true;
+    }
+
+    closeSuccessModal() {
+        this.showSuccessModal = false;
     }
 
     addComment() {

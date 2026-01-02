@@ -64,6 +64,10 @@ export class ApiService {
         return this.http.post(`${this.apiUrl}/auth/reset-password`, data);
     }
 
+    setupPassword(data: any): Observable<any> {
+        return this.http.post(`${this.apiUrl}/auth/setup-password`, data);
+    }
+
     // Settings
     getSettings(): Observable<any[]> {
         return this.http.get<any[]>(`${this.apiUrl}/settings`);

@@ -27,8 +27,17 @@ export class LoginComponent {
     this.errorMessage = '';
 
     this.apiService.login(this.credentials).subscribe({
-      next: (user) => {
-        console.log('Login successful', user);
+      next: (response: any) => {
+        console.log('Login response', response);
+
+        if (response.mustChangePassword) {
+          this.router.navigate(['/change-password'], {
+            state: { email: response.email }
+          });
+          return;
+        }
+
+        const user = response;
         this.authService.login(user);
 
         // Redirect based on role

@@ -58,13 +58,14 @@ import { User, Role } from '../../core/models/user.model';
             </div>
 
             <!-- Password -->
-            <div>
-                <label for="password" class="block text-sm font-semibold text-gray-700 mb-1">Password</label>
-                <input type="password" id="password" name="password" [(ngModel)]="user.password" required minlength="6" placeholder="••••••••"
-                       class="block w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all bg-gray-50 focus:bg-white placeholder-gray-400">
-                <p class="mt-2 text-xs text-gray-500 flex items-center">
-                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Must be at least 6 characters.
+            <!-- Password Info -->
+            <div class="bg-blue-50 text-blue-700 p-4 rounded-xl text-sm border border-blue-100 flex items-start gap-3">
+                <svg class="w-5 h-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <p>
+                    A temporary password will be automatically generated and sent to the user's email address.
+                    They will be required to change it upon first login.
                 </p>
             </div>
 

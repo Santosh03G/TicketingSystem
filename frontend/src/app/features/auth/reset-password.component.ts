@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
+import { SuccessModalComponent } from '../../shared/components/success-modal/success-modal.component';
 
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, SuccessModalComponent],
   template: `
     <div class="min-h-screen bg-premium-gradient flex flex-col justify-center py-12 sm:px-6 lg:px-8 animate-fade-in relative z-0">
       <div class="sm:mx-auto sm:w-full sm:max-w-md relative z-10 animate-slide-up">
@@ -71,6 +72,13 @@ import { ApiService } from '../../core/services/api.service';
           </form>
         </div>
       </div>
+
+      <app-success-modal 
+        [isOpen]="showSuccessModal" 
+        [title]="'Password Reset Successful'"
+        [message]="'Your password has been reset successfully. Please login with your new password.'"
+        (close)="closeSuccessModal()">
+      </app-success-modal>
     </div>
   `
 })
@@ -104,14 +112,19 @@ export class ResetPasswordComponent implements OnInit {
     this.apiService.resetPassword({ email: this.email, password: this.password }).subscribe({
       next: () => {
         localStorage.removeItem('resetEmail');
-        // Optionally show success toast/alert
-        alert('Password reset successful. Please login with your new password.');
-        this.router.navigate(['/login']);
+        this.isLoading = false;
+        this.showSuccessModal = true;
       },
       error: (err) => {
         this.isLoading = false;
         this.errorMessage = err.error?.error || 'Failed to reset password.';
       }
     });
+  }
+  showSuccessModal = false;
+
+  closeSuccessModal() {
+    this.showSuccessModal = false;
+    this.router.navigate(['/login']);
   }
 }

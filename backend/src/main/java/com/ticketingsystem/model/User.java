@@ -39,6 +39,9 @@ public class User {
     @Column(nullable = false)
     private boolean isDeleted = false;
 
+    @Column(nullable = false)
+    private boolean isNew = true;
+
     @PrePersist
     protected void onCreate() {
         joinedAt = LocalDateTime.now();

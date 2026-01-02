@@ -27,10 +27,29 @@ public class AuthController {
 
         try {
             User user = userService.login(email, password);
-            // Clear any residual OTP data on successful login if desired, or just leave it.
+
+            if (user.isNew()) {
+                return ResponseEntity.ok(Map.of(
+                        "mustChangePassword", true,
+                        "email", user.getEmail()));
+            }
+
             return ResponseEntity.ok(user);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/setup-password")
+    public ResponseEntity<?> setupPassword(@RequestBody Map<String, String> body) {
+        String email = body.get("email");
+        String password = body.get("password");
+
+        try {
+            userService.setupPassword(email, password);
+            return ResponseEntity.ok(Map.of("message", "Password updated successfully"));
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }
 

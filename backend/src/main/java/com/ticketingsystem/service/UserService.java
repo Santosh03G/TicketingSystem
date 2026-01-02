@@ -39,16 +39,19 @@ public class UserService {
                 userRepository.save(deletedUser);
             }
         }
+        // Generate random password
+        String tempPassword = generateRandomPassword();
+        user.setPassword(tempPassword); // In real app, hash this!
+        user.setNew(true);
+
         User savedUser = userRepository.save(user);
 
         // Send welcome email
-        String subject = "Welcome to the Ticketing System";
+        String subject = "Welcome to the Ticketing System - Action Required";
         String body = "Hello " + user.getName() + ",\n\n" +
-                "Welcome to the Ticketing System! Your account has been successfully created.\n\n" +
-                "Here are your login details:\n" +
-                "Email: " + user.getEmail() + "\n" +
-                "Password: " + user.getPassword() + "\n\n" +
-                "Please login and change your password immediately.\n\n" +
+                "Welcome to the Ticketing System! Your account has been created.\n\n" +
+                "Your Temporary Password: " + tempPassword + "\n\n" +
+                "Please login with this password. You will be required to set a new password immediately.\n\n" +
                 "Best Regards,\nTicketing System Team";
 
         try {
@@ -58,6 +61,24 @@ public class UserService {
         }
 
         return savedUser;
+    }
+
+    public void setupPassword(String email, String newPassword) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        user.setPassword(newPassword); // Hash in real app
+        user.setNew(false);
+        userRepository.save(user);
+    }
+
+    private String generateRandomPassword() {
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%";
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 8; i++) {
+            int index = (int) (Math.random() * chars.length());
+            sb.append(chars.charAt(index));
+        }
+        return sb.toString();
     }
 
     public User updateUser(Long id, User userDetails) {

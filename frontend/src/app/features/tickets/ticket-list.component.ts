@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, ViewChildren, QueryList } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ApiService } from '../../core/services/api.service';
 import { Ticket, TicketStatus, TicketPriority } from '../../core/models/ticket.model';
@@ -36,9 +36,11 @@ import { CustomSelectComponent, SelectOption } from '../../shared/components/cus
              </div>
              <div class="w-full sm:w-48 relative">
                 <app-custom-select
+                    #statusFilterDropdown
                     [options]="statusOptions"
                     [selectedValue]="selectedStatus"
                     (selectionChange)="onStatusFilterChange($event)"
+                    (opened)="onDropdownOpen(statusFilterDropdown)"
                     placeholder="All Statuses">
                 </app-custom-select>
              </div>
@@ -98,10 +100,12 @@ import { CustomSelectComponent, SelectOption } from '../../shared/components/cus
                   <div class="flex items-center space-x-3 w-64"> <!-- Constrained width for the dropdown -->
                       <label class="text-sm font-medium text-gray-700 whitespace-nowrap">Assign to:</label>
                       <app-custom-select 
+                          #ticketAssignDropdown
                           [options]="staffOptions" 
                           [selectedValue]="ticket.assignedTo?.id || ''" 
                           placeholder="Unassigned"
-                          (selectionChange)="assignTicket(ticket, $event)">
+                          (selectionChange)="assignTicket(ticket, $event)"
+                          (opened)="onDropdownOpen(ticketAssignDropdown)">
                       </app-custom-select>
                   </div>
                   <div class="flex space-x-2">
@@ -124,6 +128,8 @@ import { CustomSelectComponent, SelectOption } from '../../shared/components/cus
   `
 })
 export class TicketListComponent implements OnInit {
+  @ViewChildren(CustomSelectComponent) dropdowns!: QueryList<CustomSelectComponent>;
+
   tickets: Ticket[] = [];
   filteredTickets: Ticket[] = []; // Store filtered tickets
   staffUsers: User[] = [];
@@ -240,6 +246,16 @@ export class TicketListComponent implements OnInit {
       });
     } else {
       console.error('User not found in local staff list for ID:', userId);
+    }
+  }
+
+  onDropdownOpen(openedDropdown: CustomSelectComponent) {
+    if (this.dropdowns) {
+      this.dropdowns.forEach(dropdown => {
+        if (dropdown !== openedDropdown) {
+          dropdown.close();
+        }
+      });
     }
   }
 }

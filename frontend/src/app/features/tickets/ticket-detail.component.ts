@@ -4,8 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/services/api.service';
 import { AuthService } from '../../core/services/auth.service';
-import { Ticket } from '../../core/models/ticket.model';
+import { Ticket, TicketStatus } from '../../core/models/ticket.model';
 import { Comment } from '../../core/models/comment.model';
+import { Role } from '../../core/models/user.model';
 
 @Component({
     selector: 'app-ticket-detail',
@@ -34,10 +35,22 @@ import { Comment } from '../../core/models/comment.model';
              <span>{{ ticket.createdAt | date:'medium' }}</span>
            </p>
         </div>
-        <a routerLink="/tickets" class="inline-flex items-center px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 hover:text-primary transition-all shadow-sm">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-            Back to Tickets
-        </a>
+        <div class="flex items-center gap-3">
+            <ng-container *ngIf="isAdmin() && ticket">
+                <button *ngIf="ticket.status !== 'RESOLVED'" (click)="updateStatus('RESOLVED')" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-green-700 bg-green-100 hover:bg-green-200 transition-all shadow-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    Resolve
+                </button>
+                <button *ngIf="ticket.status !== 'DENIED'" (click)="updateStatus('DENIED')" class="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-red-700 bg-red-100 hover:bg-red-200 transition-all shadow-sm">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    Deny
+                </button>
+            </ng-container>
+            <a routerLink="/tickets" class="inline-flex items-center px-4 py-2 border border-gray-200 rounded-lg text-sm font-medium text-gray-600 bg-white hover:bg-gray-50 hover:text-primary transition-all shadow-sm">
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+                Back to Tickets
+            </a>
+        </div>
       </div>
 
       <!-- Details Card -->
@@ -142,6 +155,25 @@ export class TicketDetailComponent implements OnInit {
 
     loadComments(id: number) {
         this.apiService.getComments(id).subscribe(comments => this.comments = comments);
+    }
+
+    isAdmin(): boolean {
+        return this.authService.hasRole([Role.ADMIN, Role.STAFF]);
+    }
+
+    updateStatus(status: string) {
+        if (!this.ticket) return;
+        if (!confirm(`Are you sure you want to mark this ticket as ${status}?`)) return;
+
+        this.apiService.updateTicket(this.ticket.id, { status: status as TicketStatus }).subscribe({
+            next: () => {
+                this.loadTicket(this.ticket!.id); // Reload to reflect changes
+            },
+            error: (err) => {
+                console.error('Failed to update status', err);
+                alert('Failed to update ticket status');
+            }
+        });
     }
 
     addComment() {

@@ -66,6 +66,7 @@ export class CustomSelectComponent {
   @Input() selectedValue: any;
   @Input() placeholder = 'Select...';
   @Output() selectionChange = new EventEmitter<any>();
+  @Output() opened = new EventEmitter<void>();
 
   isOpen = false;
 
@@ -73,6 +74,13 @@ export class CustomSelectComponent {
 
   toggle() {
     this.isOpen = !this.isOpen;
+    if (this.isOpen) {
+      this.opened.emit();
+    }
+  }
+
+  close() {
+    this.isOpen = false;
   }
 
   select(option: SelectOption) {

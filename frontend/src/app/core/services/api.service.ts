@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { User } from '../models/user.model';
 import { Ticket } from '../models/ticket.model';
@@ -62,6 +62,17 @@ export class ApiService {
 
     resetPassword(data: any): Observable<any> {
         return this.http.post(`${this.apiUrl}/auth/reset-password`, data);
+    }
+
+    // Search Tickets for Reports
+    searchTickets(params: any): Observable<any[]> {
+        let queryParams = new HttpParams();
+        if (params.status) queryParams = queryParams.set('status', params.status);
+        if (params.userId) queryParams = queryParams.set('userId', params.userId);
+        if (params.start) queryParams = queryParams.set('start', params.start);
+        if (params.end) queryParams = queryParams.set('end', params.end);
+
+        return this.http.get<any[]>(`${this.apiUrl}/tickets/search`, { params: queryParams });
     }
 
     setupPassword(data: any): Observable<any> {

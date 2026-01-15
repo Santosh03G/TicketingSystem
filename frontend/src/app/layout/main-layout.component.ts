@@ -36,6 +36,12 @@ import { Role } from '../core/models/user.model';
                     </a>
                 </ng-container>
                 <ng-container *ngIf="isAdmin()">
+                    <a routerLink="/reports" routerLinkActive="active" 
+                       class="nav-link-animated text-gray-500 hover:text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium transition-colors duration-200">
+                      Reports
+                    </a>
+                </ng-container>
+                <ng-container *ngIf="isAdmin()">
                     <a routerLink="/settings" routerLinkActive="active" 
                        class="nav-link-animated text-gray-500 hover:text-gray-900 inline-flex items-center px-1 pt-1 text-sm font-medium transition-colors duration-200">
                       Settings

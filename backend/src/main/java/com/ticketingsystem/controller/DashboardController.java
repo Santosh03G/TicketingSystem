@@ -25,6 +25,11 @@ public class DashboardController {
         stats.put("open", ticketService.countByStatus(TicketStatus.OPEN));
         stats.put("in_progress", ticketService.countByStatus(TicketStatus.IN_PROGRESS));
         stats.put("resolved", ticketService.countByStatus(TicketStatus.RESOLVED));
+
+        // Admin stats
+        stats.put("resolved_today", ticketService.countResolvedToday());
+        stats.put("resolved_month", ticketService.countResolvedThisMonth());
+        stats.put("resolved_total", ticketService.countResolvedTotal());
         return stats;
     }
 }

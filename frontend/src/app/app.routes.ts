@@ -25,7 +25,7 @@ export const routes: Routes = [
             },
             { path: 'tickets', component: TicketListComponent },
             { path: 'tickets/new', loadComponent: () => import('./features/tickets/ticket-create.component').then(m => m.TicketCreateComponent) },
-            { path: 'tickets/:id', loadComponent: () => import('./features/tickets/ticket-detail.component').then(m => m.TicketDetailComponent) },
+            { path: 'tickets/:id', loadComponent: () => import('./features/tickets/ticket-detail.component').then(m => m.TicketDetailComponent), canActivate: [authGuard] },
             {
                 path: 'users',
                 component: UserListComponent,
@@ -34,6 +34,11 @@ export const routes: Routes = [
             {
                 path: 'users/new',
                 loadComponent: () => import('./features/users/user-create.component').then(m => m.UserCreateComponent),
+                canActivate: [roleGuard([Role.ADMIN])]
+            },
+            {
+                path: 'reports',
+                loadComponent: () => import('./features/reports/reports.component').then(m => m.ReportsComponent),
                 canActivate: [roleGuard([Role.ADMIN])]
             },
             { path: 'settings', component: SettingsComponent }

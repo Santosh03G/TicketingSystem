@@ -148,4 +148,25 @@ public class TicketService {
     public List<com.ticketingsystem.model.Comment> getCommentsByTicketId(Long ticketId) {
         return commentRepository.findByTicketIdOrderByCreatedAtDesc(ticketId);
     }
+
+    public long countResolvedToday() {
+        java.time.LocalDateTime start = java.time.LocalDate.now().atStartOfDay();
+        java.time.LocalDateTime end = java.time.LocalDate.now().atTime(java.time.LocalTime.MAX);
+        return ticketRepository.countByStatusAndUpdatedAtBetween(TicketStatus.RESOLVED, start, end);
+    }
+
+    public long countResolvedThisMonth() {
+        java.time.LocalDateTime start = java.time.YearMonth.now().atDay(1).atStartOfDay();
+        java.time.LocalDateTime end = java.time.LocalDate.now().atTime(java.time.LocalTime.MAX);
+        return ticketRepository.countByStatusAndUpdatedAtBetween(TicketStatus.RESOLVED, start, end);
+    }
+
+    public long countResolvedTotal() {
+        return ticketRepository.countByStatus(TicketStatus.RESOLVED);
+    }
+
+    public List<Ticket> searchTickets(TicketStatus status, Long userId, java.time.LocalDateTime start,
+            java.time.LocalDateTime end) {
+        return ticketRepository.searchTickets(status, userId, start, end);
+    }
 }

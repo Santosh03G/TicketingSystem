@@ -58,4 +58,14 @@ public class TicketController {
             @RequestBody com.ticketingsystem.dto.CommentRequest request) {
         return ticketService.addComment(id, request);
     }
+
+    @GetMapping("/search")
+    public List<Ticket> searchTickets(
+            @RequestParam(required = false) com.ticketingsystem.model.TicketStatus status,
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime start,
+            @RequestParam(required = false) @org.springframework.format.annotation.DateTimeFormat(iso = org.springframework.format.annotation.DateTimeFormat.ISO.DATE_TIME) java.time.LocalDateTime end) {
+        System.out.println("Search Req: status=" + status + ", userId=" + userId + ", start=" + start + ", end=" + end);
+        return ticketService.searchTickets(status, userId, start, end);
+    }
 }
